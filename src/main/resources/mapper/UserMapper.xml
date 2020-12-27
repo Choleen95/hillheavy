@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.es.mapper.UserMapper">
+
+    <resultMap id="BaseMap" type="com.example.es.pojo.User">
+        <result column="id" property="id" jdbcType="INTEGER" />
+        <result column="username" property="username" jdbcType="VARCHAR" />
+        <result column="password" property="password" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <resultMap id="RoleMap" type="com.example.es.pojo.Role">
+        <result column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="chinese_name" property="chineseName" jdbcType="VARCHAR" />
+     </resultMap>
+
+    <select id="getUserAll" resultMap="BaseMap">
+        select * from t_user
+    </select>
+
+    <select id="selectUser" resultMap="BaseMap">
+        select * from t_user where username = #{username}
+    </select>
+
+    <select id="selectRole" resultMap="RoleMap">
+      select  r.id,r.name,r.chinese_name from t_role r left join t_user_role ur on ur.role_id = r.id where ur.user_id = #{userId}
+    </select>
+
+    <insert id="save" parameterType="com.example.es.pojo.User"  keyProperty="id" useGeneratedKeys="true">
+        insert into t_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null">
+                username,
+            </if>
+            <if test="password != null">
+                password,
+            </if>
+            <if test="enabled != null">
+                enabled,
+            </if>
+            <if test="locked != null">
+                locked
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="username != null">
+                #{username},
+            </if>
+            <if test="password != null">
+                #{password},
+            </if>
+            <if test="enabled != null">
+                #{enabled},
+            </if>
+            <if test="locked != null">
+                #{locked}
+            </if>
+        </trim>
+    </insert>
+</mapper>
