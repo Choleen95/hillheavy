@@ -24,7 +24,7 @@ public class MyUserDetails implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        if(roles!= null && roles.size() > 0){
+        if (roles != null && roles.size() > 0) {
             for (Role role : roles) {
                 authorities.add(new SimpleGrantedAuthority(role.getName()));
             }
@@ -34,7 +34,7 @@ public class MyUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user == null ? null:user.getPassword();
+        return user == null ? null : user.getPassword();
     }
 
     @Override
@@ -50,7 +50,7 @@ public class MyUserDetails implements UserDetails {
     @Override
     public boolean isAccountNonLocked() {
         Integer locked = user.getLocked();
-        if(locked == 0){
+        if (locked == 0) {
             return true;
         }
         return false;
@@ -64,9 +64,17 @@ public class MyUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         Integer enabled = user.getEnabled();
-        if(enabled == 1){
+        if (enabled == 1) {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "MyUserDetails{" +
+                "user=" + user +
+                ", roles=" + roles +
+                '}';
     }
 }

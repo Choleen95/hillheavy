@@ -2,7 +2,7 @@ package com.example.es.mapper;
 
 import com.example.es.pojo.Role;
 import com.example.es.pojo.User;
-import tk.mybatis.mapper.common.Mapper;
+
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
  * @author Choleen
  */
 
-public interface UserMapper extends Mapper<User> {
+public interface UserMapper {
 
     List<User> getUserAll();
 

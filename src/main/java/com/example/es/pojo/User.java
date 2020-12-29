@@ -2,17 +2,14 @@ package com.example.es.pojo;
 
 import lombok.Data;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author Choleen
  * @since 2020/12/25 22:56
  **/
 @Data
-@Table(name = "t_user")
+@Entity(name = "t_user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

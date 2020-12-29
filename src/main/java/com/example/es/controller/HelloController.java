@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Choleen
@@ -20,8 +21,9 @@ public class HelloController {
     private UserService userService;
 
     @GetMapping("/sayHello")
-    public String sayHello(){
-        return "welcome to Elastic core center";
+    public ResponseBean sayHello(){
+        List<User> userList = userService.getUserList();
+        return ResponseBean.sendByData(200,"welcome to Elastic core center",userList);
     }
 
     @GetMapping("/welcome/say")
@@ -33,11 +35,5 @@ public class HelloController {
     public ResponseBean helloByAdmin(){
         return ResponseBean.ok("you has role_admin,access to method");
     }
-
-    @GetMapping("/login")
-    public ResponseBean login(){
-        return ResponseBean.sendByCode("you not login ,please login now.",401);
-    }
-
 
 }

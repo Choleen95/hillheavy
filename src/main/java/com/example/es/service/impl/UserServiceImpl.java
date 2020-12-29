@@ -1,21 +1,23 @@
 package com.example.es.service.impl;
 
+import com.example.es.Dao.HillHeavyDao;
 import com.example.es.mapper.UserMapper;
 import com.example.es.pojo.MyUserDetails;
 import com.example.es.pojo.Role;
 import com.example.es.pojo.User;
 import com.example.es.service.UserService;
 import com.example.es.vo.ResponseBean;
-import org.apache.ibatis.lang.UsesJava7;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+
 
 import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -38,7 +40,7 @@ public class UserServiceImpl implements UserDetailsService , UserService {
         User user = userMapper.selectUser(username);
         MyUserDetails details = new MyUserDetails();
         if(user == null){
-            throw new RuntimeException("this account not exist");
+            throw new BadCredentialsException("this username or password is not true!");
         }
         details.setUser(user);
         Integer id = user.getId();

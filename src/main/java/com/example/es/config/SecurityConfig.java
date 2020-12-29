@@ -1,29 +1,39 @@
 package com.example.es.config;
 
+import com.example.es.pojo.MyUserDetails;
 import com.example.es.service.UserService;
 import com.example.es.service.impl.UserServiceImpl;
 import com.example.es.vo.ResponseBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -37,6 +47,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Resource
     private UserServiceImpl userServiceImpl;
 
+    @Resource
+    DataSource dataSource;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userServiceImpl).passwordEncoder(passwordEncoder());
@@ -45,7 +58,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) throws Exception {
         //忽略拦截
-        web.ignoring().antMatchers("/register","/sayHello","/js/**","/images/**","/css/**");
+        web.ignoring().antMatchers("/register","/js/**","/images/**","/css/**");
     }
 
     @Override
@@ -59,27 +72,38 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .loginPage("/login.html")
                //登录处理接口
+                .loginPage("/login.html")
                 .loginProcessingUrl("/doLogin")
-                .successForwardUrl("/success.html")
                //定义登录成功的处理器
                 .successHandler(new AuthenticationSuccessHandler() {
                     @Override
                     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
                         response.setContentType("application/json;charset=utf-8");
-                        PrintWriter out = response.getWriter();
-                        String result = new ObjectMapper().writeValueAsString(ResponseBean.sendByCode("you have login success !", 200));
-                        out.write(result);
-                        out.flush();
+                        response.sendRedirect("/success.html");
+                        MyUserDetails userName = (MyUserDetails)authentication.getPrincipal();
+                        Object credentials = authentication.getCredentials();
+                        System.out.println(userName+" "+credentials);
                     }
                 })
                 .failureHandler(new AuthenticationFailureHandler() {
                     @Override
-                    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-                        response.setContentType("application/json;charset=utf-8");
-                        PrintWriter out = response.getWriter();
-                        ResponseBean responseBean = ResponseBean.sendByCode("you have login failure !", 401);
+                    public void onAuthenticationFailure(HttpServletRequest req, HttpServletResponse resp, AuthenticationException ex) throws IOException, ServletException {
+                        resp.setContentType("application/json;charset=utf-8");
+                        PrintWriter out = resp.getWriter();
+                        ResponseBean responseBean = new ResponseBean();
+                        if(ex instanceof LockedException){
+                            responseBean.setMessage("账户被锁定，请联系管理员!");
+                        }else if(ex instanceof CredentialsExpiredException){
+                            responseBean.setMessage("密码过期，请联系管理员!");
+                        }else if(ex instanceof AccountExpiredException){
+                            responseBean.setMessage("账户过期，请联系管理员!");
+                        }else if(ex instanceof DisabledException){
+                            responseBean.setMessage("账户被禁用，请联系管理员!");
+                        }else if(ex instanceof BadCredentialsException){
+                            responseBean.setMessage("密码或用户名输入错误，请重新输入!");
+                        }
+                        responseBean.setCode(400);
                         String result = new ObjectMapper().writeValueAsString(responseBean);
                         out.write(result);
                         out.flush();
@@ -90,7 +114,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .logout()
                 .logoutUrl("/logout")
-                .logoutRequestMatcher(new RegexRequestMatcher("/logout","POST"))
                 .logoutSuccessHandler(new LogoutSuccessHandler() {
                     @Override
                     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -104,12 +127,53 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .httpBasic()
                 .and()
-                .csrf().disable();
+                .csrf().disable()
+                .exceptionHandling()
+                .authenticationEntryPoint((req,resp,authException) -> {
+                      resp.setContentType("application/json;charset=utf-8");
+                      PrintWriter out = resp.getWriter();
+                      ResponseBean bean = new ResponseBean();
+                      bean.setCode(401);
+                      bean.setMessage("尚未登录，请先登录!");
+                      out.write(new ObjectMapper().writeValueAsString(bean));
+                      out.flush();
+                      out.close();
+                });
 
     }
 
+    /**
+     * 生成密码
+     * @param
+     * @author Choleen
+     * @date 2020/12/28 21:35
+     * @return {@link PasswordEncoder}
+     */
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RoleHierarchy roleHierarchy(){
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy("ROLE_dba > ROLE_admin > ROLE_user");
+        return hierarchy;
+    }
+
+
+    @Override
+    @Bean
+    protected UserDetailsService userDetailsService(){
+        JdbcUserDetailsManager manager = new JdbcUserDetailsManager();
+        manager.setDataSource(dataSource);
+        if(!manager.userExists("九月的山沉")){
+            manager.createUser(org.springframework.security.core.userdetails.User.withUsername("九月的山沉")
+                    .password("123").roles("user").build());
+        }
+        if(!manager.userExists("admin")){
+            manager.createUser(User.withUsername("admin").password("123").roles("admin").build());
+        }
+        return manager;
     }
 }
