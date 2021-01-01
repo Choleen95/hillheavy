@@ -130,14 +130,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint((req,resp,authException) -> {
-                      resp.setContentType("application/json;charset=utf-8");
-                      PrintWriter out = resp.getWriter();
-                      ResponseBean bean = new ResponseBean();
-                      bean.setCode(401);
-                      bean.setMessage("尚未登录，请先登录!");
-                      out.write(new ObjectMapper().writeValueAsString(bean));
-                      out.flush();
-                      out.close();
+                      resp.sendRedirect("/login.html");
                 });
 
     }
