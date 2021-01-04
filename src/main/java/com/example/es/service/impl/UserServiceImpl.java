@@ -1,12 +1,15 @@
 package com.example.es.service.impl;
 
 import com.example.es.Dao.HillHeavyDao;
+import com.example.es.config.DynamicDataSourceContextHolder;
 import com.example.es.mapper.UserMapper;
 import com.example.es.pojo.MyUserDetails;
 import com.example.es.pojo.Role;
 import com.example.es.pojo.User;
 import com.example.es.service.UserService;
 import com.example.es.vo.ResponseBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -27,11 +30,16 @@ import java.util.Objects;
  **/
 @Service
 public class UserServiceImpl implements UserDetailsService , UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+
     @Resource
     private UserMapper userMapper;
 
     @Override
-    public List<User> getUserList(){
+    public List<User> getUserList(String type){
+        DynamicDataSourceContextHolder.setRouteKey(type);
+        logger.info("数据源---------------->{}",DynamicDataSourceContextHolder.getRouteKey());
         return userMapper.getUserAll();
     }
 

@@ -12,7 +12,8 @@ import java.util.List;
  */
 public interface UserService{
 
-    List<User> getUserList();
+    List<User> getUserList(String type);
 
     ResponseBean doRegister(String username, String password, String confirmPassword);
+
 }

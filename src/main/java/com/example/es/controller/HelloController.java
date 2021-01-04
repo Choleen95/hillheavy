@@ -3,9 +3,7 @@ package com.example.es.controller;
 import com.example.es.pojo.User;
 import com.example.es.service.UserService;
 import com.example.es.vo.ResponseBean;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -21,8 +19,8 @@ public class HelloController {
     private UserService userService;
 
     @GetMapping("/sayHello")
-    public ResponseBean sayHello(){
-        List<User> userList = userService.getUserList();
+    public ResponseBean sayHello(String type){
+        List<User> userList = userService.getUserList(type);
         return ResponseBean.sendByData(200,"welcome to Elastic core center",userList);
     }
 
@@ -34,6 +32,11 @@ public class HelloController {
     @GetMapping("/admin/say")
     public ResponseBean helloByAdmin(){
         return ResponseBean.ok("you has role_admin,access to method");
+    }
+
+    @GetMapping("/queryUser")
+    public List<User> queryUser(String type){
+        return userService.getUserList(type);
     }
 
 }

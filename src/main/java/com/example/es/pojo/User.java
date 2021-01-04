@@ -18,4 +18,5 @@ public class User {
     private String password;
     private Integer enabled;
     private Integer locked;
+    private String type;
 }
