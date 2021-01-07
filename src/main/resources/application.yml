@@ -36,8 +36,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
 
-      
+
+
+
+
 mybatis:
   mapper-locations: classpath:mapper/*Mapper.xml
   type-aliases-package: com.es.pojo
 
+elasticsearch:
+  username: elastic
+  password: admin123
+  host: 192.168.246.130
+  port: 9200
+
+# 链接
+DEFAULT: https

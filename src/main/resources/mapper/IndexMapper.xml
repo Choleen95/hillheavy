@@ -6,8 +6,23 @@
         <result column="uname" property="uname" jdbcType="VARCHAR" />
         <result column="pass" property="pass" jdbcType="VARCHAR" />
     </resultMap>
+    <resultMap id="InfoMap" type="com.example.es.pojo.InternetInfo">
+        <result column="id" property="id" jdbcType="BIGINT"/>
+        <result column="url" property="url" jdbcType="VARCHAR" />
+        <result column="title" property="title" jdbcType="VARCHAR" />
+        <result column="content" property="content" jdbcType="VARCHAR" />
+        <result column="date" property="date" jdbcType="DATETIME" />
+    </resultMap>
 
     <select id="selectOne" resultMap="BaseMap">
         select * from t_user
+    </select>
+
+    <select id="queryInternetInfoList" resultMap="InfoMap">
+        select * from t_internet_info limit ${number} offset ${page}
+    </select>
+
+    <select id="queryCountByInternetInfo" resultType="integer">
+        select count(*) from t_internet_info
     </select>
 </mapper>
