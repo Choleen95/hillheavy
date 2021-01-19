@@ -3,15 +3,15 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.es.mapper.IndexMapper">
     <resultMap id="BaseMap" type="com.example.es.pojo.User">
-        <result column="uname" property="uname" jdbcType="VARCHAR" />
-        <result column="pass" property="pass" jdbcType="VARCHAR" />
+        <result column="uname" property="username" jdbcType="VARCHAR" />
+        <result column="pass" property="password" jdbcType="VARCHAR" />
     </resultMap>
     <resultMap id="InfoMap" type="com.example.es.pojo.InternetInfo">
         <result column="id" property="id" jdbcType="BIGINT"/>
         <result column="url" property="url" jdbcType="VARCHAR" />
         <result column="title" property="title" jdbcType="VARCHAR" />
         <result column="content" property="content" jdbcType="VARCHAR" />
-        <result column="date" property="date" jdbcType="DATETIME" />
+        <result column="date" property="date" jdbcType="DATE" />
     </resultMap>
 
     <select id="selectOne" resultMap="BaseMap">
@@ -19,7 +19,7 @@
     </select>
 
     <select id="queryInternetInfoList" resultMap="InfoMap">
-        select * from t_internet_info limit ${number} offset ${page}
+        select id,title,url,content,DATE_FORMAT(date,'%Y-%m-%d %H:%i:%s') as date from t_internet_info limit ${number} offset ${page}
     </select>
 
     <select id="queryCountByInternetInfo" resultType="integer">

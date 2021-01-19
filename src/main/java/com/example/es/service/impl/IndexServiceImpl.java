@@ -5,13 +5,16 @@ import com.example.es.config.RestClientComponent;
 import com.example.es.mapper.IndexMapper;
 import com.example.es.pojo.InternetInfo;
 import com.example.es.pojo.User;
+import com.example.es.pojo.resp.EsInternetInfoResp;
 import com.example.es.service.IndexService;
 import com.example.es.utils.AsynExecutorUtil;
 import com.example.es.utils.MyAssert;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.media.jfxmediaimpl.HostUtils;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -35,7 +38,11 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * @author Choleen
+ * @author 山沉
+ * @公众号 九月的山沉
+ * @微信号 Applewith520
+ * @Github https://github.com/Choleen95
+ * @博客 https://www.cnblogs.com/Choleen/
  * @since 2020/12/25 22:52
  **/
 @Service
@@ -65,7 +72,11 @@ public class IndexServiceImpl implements IndexService {
         DynamicDataSourceContextHolder.setRouteKey(type);
         String index = INDEX_PREFIX+type;
         //判断是否存在
-        existsIndex(index,restClient);
+        try {
+            existsIndex(index,restClient);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
         //创建索引
         CreateIndexResponse response = createIndexAndMappings(restClient, index);
         MyAssert.isEmpty(response,"create index fail");
@@ -73,17 +84,13 @@ public class IndexServiceImpl implements IndexService {
         bulkInsertData(type,index,restClient);
     }
 
-    public void existsIndex(String index,RestHighLevelClient restClient){
+    public void existsIndex(String index,RestHighLevelClient restClient)throws Exception{
         GetIndexRequest request = new GetIndexRequest(index);
-        try {
-            boolean exists = restClient.indices().exists(request, RequestOptions.DEFAULT);
-            if(exists){
-                //删除
-                DeleteIndexRequest deleteRequest = new DeleteIndexRequest(index);
-                restClient.indices().delete(deleteRequest,RequestOptions.DEFAULT);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        boolean exists = restClient.indices().exists(request, RequestOptions.DEFAULT);
+        if(exists){
+            //删除
+            DeleteIndexRequest deleteRequest = new DeleteIndexRequest(index);
+            restClient.indices().delete(deleteRequest,RequestOptions.DEFAULT);
         }
     }
 
@@ -110,8 +117,7 @@ public class IndexServiceImpl implements IndexService {
                 "        \"index\": false\n" +
                 "      },\n" +
                 "      \"date\":{\n" +
-                "        \"type\": \"date\",\n" +
-                "        \"index\":false\n" +
+                "        \"type\": \"keyword\"\n" +
                 "      },\n" +
                 "      \"id\":{\n" +
                 "        \"type\": \"keyword\"\n" +
@@ -142,35 +148,43 @@ public class IndexServiceImpl implements IndexService {
         Integer total = indexMapper.queryCountByInternetInfo();
         //每一千条，一个线程
         Integer longNumber = total/1000;
-        double pointNumber = total/1000;
+        double pointNumber = (double)total/1000;
         if(longNumber < pointNumber){
             longNumber++;
         }
-        for (long i = 0; i < longNumber; i++) {
-            Integer finalLongNumber = longNumber;
+        for (Integer i = 0; i < longNumber; i++) {
+            Integer finalLongNumber = i*1000;
             AsynExecutorUtil.getPool().execute(()->{
                 long start = System.currentTimeMillis();
-                logger.info("数据源--->{},线程开始--->{}",type,Thread.currentThread().getName());
+                logger.info("数据源--->{},线程开始--->{},页数{}",type,Thread.currentThread().getName(),finalLongNumber);
                 DynamicDataSourceContextHolder.setRouteKey(type);
                 List<InternetInfo> internetInfos = indexMapper.queryInternetInfoList(finalLongNumber, 1000);
                 //创建索引
                 BulkRequest bulkRequest = new BulkRequest();
                 for (InternetInfo entity : internetInfos) {
+
                     IndexRequest request = new IndexRequest(index);
                     request.id(String.valueOf(entity.getId()));
                     ObjectMapper mapper = new ObjectMapper();
                     try {
                         String json = mapper.writeValueAsString(entity);
-                        request.source(json);
+                        request.source(json,XContentType.JSON);
                         bulkRequest.add(request);
-                    } catch (JsonProcessingException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
                 //立即刷新
                 bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                 try {
-                    BulkResponse response = restClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                    BulkResponse bulkItemResponses = restClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                    BulkItemResponse[] items = bulkItemResponses.getItems();
+                    BulkItemResponse item = items[0];
+                    BulkItemResponse.Failure failure = item.getFailure();
+                    if(failure != null){
+                        Exception cause = failure.getCause();
+                        logger.error(cause.getMessage());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
