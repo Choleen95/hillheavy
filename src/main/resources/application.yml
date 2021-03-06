@@ -1,0 +1,54 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  datasource:
+    dynamicNames: mv,test
+    mv:
+      url: jdbc:mysql:///movie?useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true
+      username: root
+      password: root
+      driver-class-name: com.mysql.jdbc.Driver
+    test:
+      url: jdbc:mysql:///testdb?useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true
+      username: root
+      password: root
+      driver-class-name: com.mysql.jdbc.Driver
+    druid:
+      db-type: com.alibaba.druid.pool.DruidDataSource
+      initial-size: 10
+      max-active: 100
+      min-idle: 3
+      max-wait: 5000
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 100
+
+
+  jpa:
+    database: mysql
+    database-platform: mysql
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+
+
+
+
+mybatis:
+  mapper-locations: classpath:mapper/*Mapper.xml
+  type-aliases-package: com.es.pojo
+
+elasticsearch:
+  username: elastic
+  password: admin123
+  host: 192.168.246.130
+  port: 9200
+
+# 链接
+DEFAULT: https
