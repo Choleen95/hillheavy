@@ -4,7 +4,7 @@ package com.example.es.config;
  * @author 山沉
  * @公众号 九月的山沉
  * @微信号 Applewith520
- * @Github https://github.com/Choleen95
+ * @个人博客 https://choleen95.github.io/
  * @博客 https://www.cnblogs.com/Choleen/
  * @since 2021/1/1 21:57
  */
