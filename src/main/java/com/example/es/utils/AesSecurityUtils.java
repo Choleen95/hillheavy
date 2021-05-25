@@ -6,7 +6,6 @@ import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.prng.SP800SecureRandom;
 import org.bouncycastle.crypto.prng.SP800SecureRandomBuilder;
 
-import javax.crypto.Cipher;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -41,7 +40,7 @@ public class AesSecurityUtils {
         source.nextBytes(nonce);
         //设置种子长度为385
         int entropyBitsRequired = 385;
-        //密码引擎 NIST S800 60标准
+        //密码引擎 NIST SP800 90A标准
         BlockCipher cipher = new AESEngine();
         //是否获取随机数时刷新熵源，不是，则不同机器定时刷新
         boolean reSeed = false;
@@ -106,7 +105,7 @@ public class AesSecurityUtils {
     }
 
     /**
-     * 预加密密钥
+     * AES加密
      * @param plainText 预加密密钥
      * @author 山沉
      * @date 2021/5/25 22:12
@@ -118,6 +117,13 @@ public class AesSecurityUtils {
         return AesCryptUtils.encryptAES(plainText, key, getRandomByte(16), "AES_CBC");
     }
 
+    /**
+     * AES解密
+     * @param encryptPlainTxt 预解密的文本
+     * @author 山沉
+     * @date 2021/5/25 23:13
+     * @return {@link String}
+     */
     public static String decryptPlainTxt(String encryptPlainTxt) throws Exception {
         String aesWorkKey = "security:3BEE50795A23E0264C4A42368AEA2DDF:480B703F72139E96D917B61FA321B13D796D46CE26E93C91BDC7CC0949DC5F71367AC57E39356575741EED0023CF5236";
         String workKey = decryptWorkKey(aesWorkKey);
