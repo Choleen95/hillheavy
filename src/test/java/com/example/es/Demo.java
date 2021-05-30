@@ -231,7 +231,8 @@ public class Demo {
         //security:BA4E82FD45DEC2D8979FB319256A4379:5AFFA1699F6AC5FCA0CE707DEBCC8F77
         System.out.println(encryptPlainText);
         //解密
-        AesSecurityUtils.decryptPlainTxt(encryptPlainText);
+        String plainTxt = AesSecurityUtils.decryptPlainTxt(encryptPlainText);
+        System.out.println(plainTxt);
 
     }
 

@@ -83,17 +83,25 @@ public class AesCryptUtils {
         return "security:"+HexUtils.byte2HexStr(salt,true)+":"+HexUtils.byte2HexStr(aesResult,true);
     }
 
-    public static String decryptAES(String encryptPlainTxt,String workKey,String aesType){
+    public static String decryptAES(String encryptPlainTxt,String workKey,String aesType) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
         //去除security
-        String regStr = "security:*?([0-9A-Z]z{32})\\:*?([A-Z0-9]{32})";
+        String regStr = "security:*?([0-9A-Z]{32})\\:*?([A-Z0-9]{32})";
         Pattern compile = Pattern.compile(regStr);
         Matcher matcher = compile.matcher(encryptPlainTxt);
         //捕获
+        String saltStr = "";
+        String cipherStr = "";
         while (matcher.find()){
             String group = matcher.group();
             System.out.println(group);
+            saltStr = matcher.group(1);
+            cipherStr = matcher.group(2);
         }
-        return null;
+        byte[] salt = HexUtils.str2HexByte(saltStr);
+        byte[] cipher = HexUtils.str2HexByte(cipherStr);
+        byte[] key = HexUtils.str2HexByte(workKey);
+        byte[] decryptCipherAES = decryptCipherAES(cipher, key, salt, aesType);
+        return new String(decryptCipherAES,AesSecurityUtils.DEFAULT_CHARSET);
     }
 
     private static byte[] encryptCipherAES(byte[] content,byte[] key,byte[] salt,String aesType) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
@@ -104,6 +112,18 @@ public class AesCryptUtils {
             cipher = encryptCipher(keySpec,new GCMParameterSpec(128,Arrays.copyOf(salt,12)),"AES/GCM/NoPadding");
         }else {
             cipher = encryptCipher(keySpec,new IvParameterSpec(Arrays.copyOf(salt,16)),"AES/CBC/PKCS5Padding");
+        }
+        return cipher.doFinal(content);
+    }
+
+    private static byte[] decryptCipherAES(byte[] content,byte[] key,byte[] salt,String aesType) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = null;
+        byte[] bytes = Arrays.copyOf(key,16);
+        SecretKeySpec keySpec = new SecretKeySpec(bytes,"AES");
+        if(isGcmCipherByType(aesType)){
+            cipher = decryptCipher(keySpec,new GCMParameterSpec(128,salt),"AES/GCM/NoPadding");
+        }else {
+            cipher = decryptCipher(keySpec,new IvParameterSpec(salt),"AES/CBC/PKCS5Padding");
         }
         return cipher.doFinal(content);
     }
