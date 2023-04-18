@@ -25,4 +25,6 @@ public interface IndexService {
      * @return {@link }
      */
     void batchInsert(String type);
+
+    List<User> queryByEs();
 }

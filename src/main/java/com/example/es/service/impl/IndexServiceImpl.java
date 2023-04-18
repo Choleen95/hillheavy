@@ -9,12 +9,15 @@ import com.example.es.service.IndexService;
 import com.example.es.utils.AsynExecutorUtil;
 import com.example.es.utils.MyAssert;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -24,6 +27,10 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -77,6 +84,26 @@ public class IndexServiceImpl implements IndexService {
         MyAssert.isEmpty(response,"create index fail");
         //异步插入数据
         bulkInsertData(type,index,restClient);
+    }
+
+    @Override
+    public List<User> queryByEs() {
+        SearchRequest request = new SearchRequest();
+        SearchSourceBuilder builder = new SearchSourceBuilder();
+        WildcardQueryBuilder queryBuilder = QueryBuilders.wildcardQuery("username", "java");
+        builder.query(queryBuilder);
+        request.source(builder);
+        RestHighLevelClient client = transportClient.getClient();
+        try {
+            SearchResponse search = client.search(request, RequestOptions.DEFAULT);
+            SearchHit[] hits = search.getHits().getHits();
+            for (SearchHit hit : hits) {
+                Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void existsIndex(String index,RestHighLevelClient restClient)throws Exception{

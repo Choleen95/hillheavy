@@ -32,4 +32,9 @@ public class IndexController {
         indexService.batchInsert(type);
     }
 
+    @GetMapping("query")
+    public List<User> queryByEs() {
+        return indexService.queryByEs();
+    }
+
 }
